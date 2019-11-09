@@ -121,6 +121,9 @@ private:
   uint32_t packetsReceivedTotal;
   uint32_t packetsSent;
   uint32_t packetsSentTotal;
+  ns3::Time totalEndToEndDelay;
+  std::map<uint64_t, ns3::Time> packetTimes;
+
 
   std::string m_CSVfileName;
   int m_nSinks;
@@ -138,6 +141,7 @@ RoutingExperiment::RoutingExperiment ()
       packetsReceivedTotal (0),
       packetsSent (0),
       packetsSentTotal (0),
+      totalEndToEndDelay (0),
       m_CSVfileName ("manet-routing.output.csv"),
       m_traceMobility (false),
       m_protocol (ProtocolUsed),
@@ -171,6 +175,7 @@ RoutingExperiment::ReceivePacket (Ptr<Socket> socket)
   Address senderAddress;
   while ((packet = socket->RecvFrom (senderAddress)))
     {
+      totalEndToEndDelay += Simulator::Now () - packetTimes[packet->GetUid ()];
       bytesTotal += packet->GetSize ();
       packetsReceived += 1;
       packetsReceivedTotal += 1;
@@ -181,6 +186,7 @@ RoutingExperiment::ReceivePacket (Ptr<Socket> socket)
 void
 RoutingExperiment::SentPacketTrace (Ptr<Packet const> packet)
 {
+	packetTimes.insert (std::pair<uint64_t, ns3::Time>(packet->GetUid (), Simulator::Now ()));
     packetsSent += 1;
 	packetsSentTotal += 1;
 }
@@ -209,6 +215,8 @@ RoutingExperiment::GenerateSpeedComparisonResult ()
 
   out << "Protocol" << "," << "Node Speed" << "," << "PDR" << std::endl;
   out << m_protocolName << "," << m_nodeSpeed << "," << (float)packetsReceivedTotal/packetsSentTotal << std::endl;
+  out << "Protocol" << "," << "Node Speed" << "," << "Average End-to-End Delay" << std::endl;
+  out << m_protocolName << "," << m_nodeSpeed << "," << totalEndToEndDelay.GetMilliSeconds() / packetsReceivedTotal << std::endl;
 
   out.close ();
 }

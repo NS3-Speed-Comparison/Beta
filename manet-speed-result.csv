@@ -1,2 +1,4 @@
 Protocol,Node Speed,PDR
 DSR,30.01,0.298365
+Protocol,Node Speed,Average End-to-End Delay
+DSR,30.01,847
